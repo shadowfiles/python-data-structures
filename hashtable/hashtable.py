@@ -1,4 +1,4 @@
-from array import array
+from copy import deepcopy
 
 class hashtable:
     STARTING_SIZE = 10
@@ -50,6 +50,11 @@ class hashtable:
             self.size -= 1
             return value
         elif not self.table[i] is None:
+            if self.table[i].key == key:
+                value = self.table[i].value
+                self.table[i] = self.table[i].next
+                self.size -= 1
+                return value
             last = self.table[i]
             curr = self.table[i].next
             while not curr is None:
@@ -68,6 +73,7 @@ class hashtable:
             while not entry is None:
                 result.append(entry.key)
                 entry = entry.next
+        return result
 
     def __resize(self):
         if self.size > len(self.table) * self.MAX_LOAD_FACTOR:
@@ -80,16 +86,29 @@ class hashtable:
                     entry = entry.next
 
     def __hash_index(self, obj):
+        if obj.__hash__ is None:
+            raise NotImplementedError("Object is not hashable")
         return abs(obj.__hash__()) % len(self.table)
 
     def __add__(self, other):
-        result = copy.deepcopy(self)
+        result = deepcopy(self)
         for entry in other:
-            result.add(entry.key, entry.value)
+            result.add(entry, other.get(entry))
+        return result
+
+    def __str__(self):
+        result = ""
+        for entry in self.table:
+            while not entry is None:
+                result += "{} => {}, ".format(str(entry.key), str(entry.value))
+                entry = entry.next
         return result
 
     def __iter__(self):
-        return self.key_set()
+        for entry in self.table:
+            while not entry is None:
+                yield entry.key
+                entry = entry.next
 
     class entry:
         key = None
